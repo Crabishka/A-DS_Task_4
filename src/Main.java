@@ -18,11 +18,11 @@ public class Main {
         int[] arrayForSort = arrayForRadix.clone();
 
 
-//        start = System.currentTimeMillis();
-//        Arrays.sort(arrayForSort);
-//        System.out.println("Arrays.sort time - " + (System.currentTimeMillis() - start));
-//        usedBytes = Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
-//        System.out.println("Used MegaBytes = " + usedBytes/1048576);
+        start = System.currentTimeMillis();
+        Arrays.sort(arrayForSort);
+        System.out.println("Arrays.sort time - " + (System.currentTimeMillis() - start));
+        usedBytes = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+        System.out.println("Used MegaBytes = " + usedBytes / 1048576);
 
         start = System.currentTimeMillis();
         radixSort(arrayForRadix, typeOfRadixSort.LSDByBytes);
@@ -31,9 +31,9 @@ public class Main {
         System.out.println("Used MegaBytes = " + usedBytes / 1048576);
 
 
-      for (int value : arrayForRadix) {
+        for (int value : arrayForRadix) {
             System.out.println(value);
-       }
+        }
 
 
     }
@@ -71,7 +71,7 @@ public class Main {
             if (value < 0) countOfNegative++;
         }
 
-        for (int i = 0; i < 32; i++) {   // проходимся
+        for (int i = 0; i < Math.log(max) / Math.log(2) + 1; i++) {   // проходимся
 
             int[] index = new int[2];  // создали
             int[] newArray = new int[length];
@@ -114,10 +114,9 @@ public class Main {
 
     }
 
-
     public static void radixSortLSDByBytes(int[] a) {
 
-        // разделить на положительный массив и отрицательный, потому слить
+        // разделить на положительный массив и отрицательный, потом слить
 
         int length = a.length;
         int max = Integer.MIN_VALUE;
@@ -127,17 +126,15 @@ public class Main {
             if (value < 0) countOfNegative++;
         }
 
-        for (int i = 0; i < 3; i++) {   // проходимся
+        for (int i = 0; i < 4; i++) {   // проходимся
 
             int[] index = new int[256];  // создали
-            int[] newArray = new int[length]; // создает слишком большие массивы, надо поменять
+            int[] newArray = new int[length];
 
             for (int value : a) {  // O(N)
-                int abs = Math.abs(value >> ((i) * 8));
-                index[abs % 256]++;
-
-
-
+                int temp = (value >> ((i) * 8)) % 256;
+                if (temp < 0 && i == 3) index[(Math.abs(temp) + 127)]++ ;
+                else index[(Math.abs(temp))]++;
             }
 
             int prev = 0;
@@ -148,7 +145,9 @@ public class Main {
 
             for (int j = length - 1; j >= 0; j--) {  // O(N)
 
-                int tempIndex = Math.abs((a[j] >> ((i) * 8)) % 256);
+                int tempIndex = (a[j] >> ((i) * 8)) % 256;
+                if (tempIndex < 0 && i == 3) tempIndex = Math.abs(tempIndex) + 127;
+                else tempIndex = Math.abs(tempIndex);
                 index[tempIndex]--;
                 newArray[index[tempIndex]] = a[j];
 
@@ -163,9 +162,11 @@ public class Main {
         // существуют какие-то приколы с побитовыми сдвигами и int
         // тупая идея - создаем новый массив, зная количество отрицательных чисел
         int[] result = new int[length];
-        for (int i = 0; i < countOfNegative; i++) {
-            result[i] = a[length - countOfNegative + i];
+
+        for (int i = length - 1; i >= length - countOfNegative; i--) {
+            result[length - i - 1] = a[i];
         }
+
         for (int i = 0; i < length - countOfNegative; i++) { // O(N)
             result[i + countOfNegative] = a[i];
         }
